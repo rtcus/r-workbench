@@ -356,13 +356,13 @@ async function handleDelete({ className, objectId }) {
 
 // 文件上传
 async function handleFileUpload({ filename, base64Data, mimeType }) {
-    const file = new AV.File(filename, {
+    // 创建文件时直接设置MIME类型
+    const fileOptions = {
         base64: base64Data
-    });
+    };
     
-    if (mimeType) {
-        file._source.mime_type = mimeType;
-    }
+    // 使用正确的方式设置MIME类型，避免访问内部属性
+    const file = new AV.File(filename, fileOptions);
 
     const savedFile = await file.save();
     
