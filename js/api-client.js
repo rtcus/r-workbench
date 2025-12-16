@@ -23,7 +23,17 @@ class APIClient {
             this.sessionToken = token;
         } else {
             localStorage.removeItem('sessionToken');
+            localStorage.removeItem('currentUser');
             this.sessionToken = null;
+        }
+    }
+    
+    // 保存当前用户信息
+    setCurrentUser(user) {
+        if (user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('currentUser');
         }
     }
 
@@ -65,6 +75,7 @@ class APIClient {
     async login(username, password) {
         const result = await this.request('login', { username, password });
         this.setSessionToken(result.sessionToken);
+        this.setCurrentUser(result);
         return result;
     }
 
@@ -72,6 +83,7 @@ class APIClient {
     async logout() {
         await this.request('logout');
         this.setSessionToken(null);
+        this.setCurrentUser(null);
     }
 
     // 获取当前用户
@@ -308,17 +320,28 @@ const api = new APIClient();
 // 向后兼容的AV对象模拟
 const AV = {
     User: {
-        current: async () => {
-            const user = await api.getCurrentUser();
-            if (!user) return null;
+        current: () => {
+            // 同步方法：检查本地存储的 sessionToken
+            const sessionToken = localStorage.getItem('sessionToken');
+            const cachedUser = localStorage.getItem('currentUser');
             
-            // 返回与原AV.User兼容的对象
-            return {
-                id: user.objectId,
-                get: (key) => user[key],
-                getSessionToken: () => user.sessionToken,
-                toJSON: () => user
-            };
+            if (!sessionToken || !cachedUser) {
+                return null;
+            }
+            
+            try {
+                const user = JSON.parse(cachedUser);
+                // 返回与原AV.User兼容的对象
+                return {
+                    id: user.objectId,
+                    get: (key) => user[key],
+                    getSessionToken: () => sessionToken,
+                    toJSON: () => user
+                };
+            } catch (error) {
+                console.error('解析用户信息失败:', error);
+                return null;
+            }
         },
         
         logIn: async (username, password) => {
@@ -393,9 +416,24 @@ const AV = {
             return this;
         }
         
+        addAscending(key) {
+            this.options.ascending = key;
+            return this;
+        }
+        
         descending(key) {
             this.options.descending = key;
             return this;
+        }
+        
+        addDescending(key) {
+            this.options.descending = key;
+            return this;
+        }
+        
+        async count() {
+            const results = await api.query(this.className, this.conditions, this.options);
+            return results.length;
         }
         
         async find() {
