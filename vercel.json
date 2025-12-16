@@ -31,10 +31,5 @@
       "src": "/(css|js)/(.*)",
       "dest": "/$1/$2"
     }
-  ],
-  "env": {
-    "LEANCLOUD_APP_ID": "@leancloud-app-id",
-    "LEANCLOUD_APP_KEY": "@leancloud-app-key",
-    "LEANCLOUD_SERVER_URL": "@leancloud-server-url"
-  }
+  ]
 }
