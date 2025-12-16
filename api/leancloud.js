@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
         // 恢复会话（如果有sessionToken）
         if (data?.sessionToken) {
             try {
-                const user = AV.User.become(data.sessionToken);
+                const user = await AV.User.become(data.sessionToken);
                 AV.User._currentUser = user;
             } catch (error) {
                 console.error('Session恢复失败:', error);
