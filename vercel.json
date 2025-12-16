@@ -1,35 +1,12 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "source": "/",
+      "destination": "/r-workbench.html"
     },
     {
-      "src": "r-workbench.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "css/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "js/**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/r-workbench.html"
-    },
-    {
-      "src": "/(css|js)/(.*)",
-      "dest": "/$1/$2"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ]
 }
