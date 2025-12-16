@@ -1,0 +1,7 @@
+# 不需要部署的文件
+node_modules
+.git
+.env
+.env.local
+*.log
+.DS_Store

@@ -1,0 +1,16 @@
+{
+  "name": "r-workbench",
+  "version": "1.0.0",
+  "description": "R跟单台系统 - Vercel后端",
+  "main": "api/leancloud.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "leancloud-storage": "^4.13.2"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}

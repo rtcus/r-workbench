@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "r-workbench.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "css/**/*",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "js/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/r-workbench.html"
+    },
+    {
+      "src": "/(css|js)/(.*)",
+      "dest": "/$1/$2"
+    }
+  ],
+  "env": {
+    "LEANCLOUD_APP_ID": "@leancloud-app-id",
+    "LEANCLOUD_APP_KEY": "@leancloud-app-key",
+    "LEANCLOUD_SERVER_URL": "@leancloud-server-url"
+  }
+}
