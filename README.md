@@ -128,9 +128,9 @@ vercel --prod
 
 | 变量名 | 说明 | 示例值 |
 |--------|------|--------|
-| `LEANCLOUD_APP_ID` | LeanCloud应用ID | qWTZ0xzNWk9B3bhk3vXGbfPl-gzGzoHsz |
-| `LEANCLOUD_APP_KEY` | LeanCloud应用Key | n1MnTEgdQGWk2jouFA55NF1n |
-| `LEANCLOUD_SERVER_URL` | LeanCloud服务器地址 | https://qwtz0xzn.lc-cn-n1-shared.com |
+| `LEANCLOUD_APP_ID` | LeanCloud应用ID | your_app_id_here |
+| `LEANCLOUD_APP_KEY` | LeanCloud应用Key | your_app_key_here |
+| `LEANCLOUD_SERVER_URL` | LeanCloud服务器地址 | https://your-server.lc-cn-n1-shared.com |
 
 **重要**: 
 - ✅ 这些配置只存在于Vercel服务器端
