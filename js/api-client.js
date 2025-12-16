@@ -506,60 +506,68 @@ const AV = {
         }
     },
     
-    Object: {
-        extend: (className) => {
-            return class extends AV.Object {
+    Object: class AVObject {
+        constructor(className) {
+            this.className = className;
+            this._data = {};
+        }
+        
+        set(key, value) {
+            this._data[key] = value;
+        }
+        
+        get(key) {
+            return this._data[key];
+        }
+        
+        async save() {
+            if (this._data.objectId) {
+                const result = await api.update(this.className, this._data.objectId, this._data);
+                this._data = { ...this._data, ...result };
+                return this;
+            } else {
+                const result = await api.save(this.className, this._data);
+                this._data = { ...this._data, ...result };
+                return this;
+            }
+        }
+        
+        async destroy() {
+            if (this._data.objectId) {
+                await api.delete(this.className, this._data.objectId);
+            }
+        }
+        
+        toJSON() {
+            return this._data;
+        }
+        
+        // 静态方法
+        static extend(className) {
+            return class extends AVObject {
                 constructor() {
-                    super();
-                    this.className = className;
-                    this._data = {};
+                    super(className);
                 }
             };
-        },
+        }
         
-        createWithoutData: (ObjectClass, objectId) => {
-            const obj = new ObjectClass();
+        static createWithoutData(ClassOrClassName, objectId) {
+            const className = typeof ClassOrClassName === 'string' 
+                ? ClassOrClassName 
+                : ClassOrClassName.prototype.className;
+            const obj = new AVObject(className);
             obj._data.objectId = objectId;
             return obj;
-        },
+        }
         
-        saveAll: async (objects) => {
+        static async saveAll(objects) {
             const className = objects[0]?.className;
             const dataArray = objects.map(obj => obj._data);
             const results = await api.saveAll(className, dataArray);
             return results.map((result, index) => {
-                objects[index]._data.objectId = result.objectId;
+                objects[index]._data = { ...objects[index]._data, ...result };
                 return objects[index];
             });
-        },
-        
-        set: function(key, value) {
-            this._data[key] = value;
-        },
-        
-        get: function(key) {
-            return this._data[key];
-        },
-        
-        save: async function() {
-            if (this._data.objectId) {
-                const result = await api.update(this.className, this._data.objectId, this._data);
-                this._data = result;
-            } else {
-                const result = await api.save(this.className, this._data);
-                this._data = result;
-            }
-            return this;
-        },
-        
-        destroy: async function() {
-            if (this._data.objectId) {
-                await api.delete(this.className, this._data.objectId);
-            }
-        },
-        
-        toJSON: function() {
-            return this._data;
         }
     },
     
