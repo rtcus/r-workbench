@@ -168,6 +168,12 @@ async function handleQuery({ className, conditions, options }) {
                     case 'notEqualTo':
                         query.notEqualTo(key, value.value);
                         break;
+                    case 'containedIn':
+                        query.containedIn(key, value.value);
+                        break;
+                    case 'notContainedIn':
+                        query.notContainedIn(key, value.value);
+                        break;
                     case 'exists':
                         query.exists(key);
                         break;

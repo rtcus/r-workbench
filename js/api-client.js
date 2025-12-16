@@ -391,6 +391,16 @@ const AV = {
             return this;
         }
         
+        containedIn(key, values) {
+            this.conditions[key] = { operator: 'containedIn', value: values };
+            return this;
+        }
+        
+        notContainedIn(key, values) {
+            this.conditions[key] = { operator: 'notContainedIn', value: values };
+            return this;
+        }
+        
         exists(key) {
             this.conditions[key] = { operator: 'exists' };
             return this;
