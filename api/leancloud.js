@@ -370,7 +370,7 @@ async function handleFileUpload({ filename, base64Data, mimeType }) {
         objectId: savedFile.id,
         name: savedFile.name(),
         url: savedFile.url(),
-        mimeType: savedFile.mimeType()
+        mimeType: savedFile.mime()
     };
 }
 
