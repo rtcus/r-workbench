@@ -149,47 +149,98 @@ async function handleGetCurrentUser({ sessionToken }) {
 }
 
 // 查询数据
-async function handleQuery({ className, conditions, options }) {
-    const query = new AV.Query(className);
+async function handleQuery({ className, conditions, options, orQueries }) {
+    let query;
 
-    // 应用查询条件
-    if (conditions) {
-        Object.entries(conditions).forEach(([key, value]) => {
-            if (typeof value === 'object' && value.operator) {
-                // 支持复杂查询操作符
-                switch (value.operator) {
-                    case 'equalTo':
-                        query.equalTo(key, value.value);
-                        break;
-                    case 'contains':
-                        query.contains(key, value.value);
-                        break;
-                    case 'greaterThanOrEqualTo':
-                        query.greaterThanOrEqualTo(key, value.value);
-                        break;
-                    case 'lessThanOrEqualTo':
-                        query.lessThanOrEqualTo(key, value.value);
-                        break;
-                    case 'notEqualTo':
-                        query.notEqualTo(key, value.value);
-                        break;
-                    case 'containedIn':
-                        query.containedIn(key, value.value);
-                        break;
-                    case 'notContainedIn':
-                        query.notContainedIn(key, value.value);
-                        break;
-                    case 'exists':
-                        query.exists(key);
-                        break;
-                    case 'doesNotExist':
-                        query.doesNotExist(key);
-                        break;
+    // 处理or查询
+    if (orQueries && orQueries.length > 0) {
+        // 创建多个查询对象
+        const queries = orQueries.map(orCondition => {
+            const orQuery = new AV.Query(className);
+            // 应用or查询的条件
+            Object.entries(orCondition).forEach(([key, value]) => {
+                if (typeof value === 'object' && value.operator) {
+                    switch (value.operator) {
+                        case 'equalTo':
+                            orQuery.equalTo(key, value.value);
+                            break;
+                        case 'contains':
+                            orQuery.contains(key, value.value);
+                            break;
+                        case 'greaterThanOrEqualTo':
+                            orQuery.greaterThanOrEqualTo(key, value.value);
+                            break;
+                        case 'lessThanOrEqualTo':
+                            orQuery.lessThanOrEqualTo(key, value.value);
+                            break;
+                        case 'notEqualTo':
+                            orQuery.notEqualTo(key, value.value);
+                            break;
+                        case 'containedIn':
+                            orQuery.containedIn(key, value.value);
+                            break;
+                        case 'notContainedIn':
+                            orQuery.notContainedIn(key, value.value);
+                            break;
+                        case 'exists':
+                            orQuery.exists(key);
+                            break;
+                        case 'doesNotExist':
+                            orQuery.doesNotExist(key);
+                            break;
+                    }
+                } else {
+                    orQuery.equalTo(key, value);
                 }
-            } else {
-                query.equalTo(key, value);
-            }
+            });
+            return orQuery;
         });
+        
+        // 合并or查询
+        query = AV.Query.or(...queries);
+    } else {
+        // 创建单个查询对象
+        query = new AV.Query(className);
+        
+        // 应用查询条件
+        if (conditions) {
+            Object.entries(conditions).forEach(([key, value]) => {
+                if (typeof value === 'object' && value.operator) {
+                    // 支持复杂查询操作符
+                    switch (value.operator) {
+                        case 'equalTo':
+                            query.equalTo(key, value.value);
+                            break;
+                        case 'contains':
+                            query.contains(key, value.value);
+                            break;
+                        case 'greaterThanOrEqualTo':
+                            query.greaterThanOrEqualTo(key, value.value);
+                            break;
+                        case 'lessThanOrEqualTo':
+                            query.lessThanOrEqualTo(key, value.value);
+                            break;
+                        case 'notEqualTo':
+                            query.notEqualTo(key, value.value);
+                            break;
+                        case 'containedIn':
+                            query.containedIn(key, value.value);
+                            break;
+                        case 'notContainedIn':
+                            query.notContainedIn(key, value.value);
+                            break;
+                        case 'exists':
+                            query.exists(key);
+                            break;
+                        case 'doesNotExist':
+                            query.doesNotExist(key);
+                            break;
+                    }
+                } else {
+                    query.equalTo(key, value);
+                }
+            });
+        }
     }
 
     // 应用查询选项

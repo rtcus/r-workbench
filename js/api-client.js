@@ -105,6 +105,16 @@ class APIClient {
     
     // 查询数据
     async query(className, conditions = {}, options = {}) {
+        // 处理or查询
+        if (options.orQueries && options.orQueries.length > 0) {
+            // 将or查询条件添加到请求数据中
+            return await this.request('query', {
+                className,
+                conditions,
+                options,
+                orQueries: options.orQueries
+            });
+        }
         return await this.request('query', {
             className,
             conditions,
@@ -463,6 +473,20 @@ const AV = {
                 this.options.select = [];
             }
             this.options.select.push(...keys);
+            return this;
+        }
+        
+        // 添加or查询支持
+        or(queries) {
+            if (!this.options.orQueries) {
+                this.options.orQueries = [];
+            }
+            // 合并多个查询的条件
+            queries.forEach(query => {
+                if (query.conditions) {
+                    this.options.orQueries.push(query.conditions);
+                }
+            });
             return this;
         }
         

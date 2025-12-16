@@ -12,6 +12,8 @@ async function loadFileList() {
         // 从Tracking表中获取所有有附件的记录
         const query = new AV.Query('Tracking');
         query.exists('attachments');
+        // 添加select只返回需要的字段，减少数据传输量
+        query.select('attachments', 'containerNo', 'customsNo', 'objectId');
         const results = await query.find();
         
         fileListData = [];
@@ -186,7 +188,9 @@ async function processSingleFile(file, fileType) {
         orQuery.push(new AV.Query('Tracking').equalTo('customsNo', fileName));
         orQuery.push(new AV.Query('Tracking').equalTo('billNo', fileName));
         
-        query._orQuery(orQuery);
+        query.or(orQuery);
+        // 添加select只返回需要的字段，减少数据传输量
+        query.select('attachments', 'containerNo', 'customsNo');
         
         const matchedRecords = await query.find();
         
