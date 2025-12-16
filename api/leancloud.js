@@ -7,8 +7,12 @@ const AV = require('leancloud-storage');
 AV.init({
     appId: process.env.LEANCLOUD_APP_ID,
     appKey: process.env.LEANCLOUD_APP_KEY,
+    masterKey: process.env.LEANCLOUD_MASTER_KEY,
     serverURL: process.env.LEANCLOUD_SERVER_URL
 });
+
+// 使用 MasterKey（后端安全）
+AV.Cloud.useMasterKey();
 
 // CORS 配置
 const corsHeaders = {
