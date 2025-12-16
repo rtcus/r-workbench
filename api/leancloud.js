@@ -66,6 +66,11 @@ module.exports = async (req, res) => {
                 result = await handleQuery(data);
                 break;
 
+            // 数据计数
+            case 'count':
+                result = await handleCount(data);
+                break;
+
             // 数据保存
             case 'save':
                 result = await handleSave(data);
@@ -203,6 +208,54 @@ async function handleQuery({ className, conditions, options }) {
         objectId: obj.id,
         ...obj.toJSON()
     }));
+}
+
+// 数据计数（优化性能）
+async function handleCount({ className, conditions, options }) {
+    const query = new AV.Query(className);
+
+    // 应用查询条件（与 handleQuery 相同）
+    if (conditions) {
+        Object.entries(conditions).forEach(([key, value]) => {
+            if (typeof value === 'object' && value.operator) {
+                switch (value.operator) {
+                    case 'equalTo':
+                        query.equalTo(key, value.value);
+                        break;
+                    case 'contains':
+                        query.contains(key, value.value);
+                        break;
+                    case 'greaterThanOrEqualTo':
+                        query.greaterThanOrEqualTo(key, value.value);
+                        break;
+                    case 'lessThanOrEqualTo':
+                        query.lessThanOrEqualTo(key, value.value);
+                        break;
+                    case 'notEqualTo':
+                        query.notEqualTo(key, value.value);
+                        break;
+                    case 'containedIn':
+                        query.containedIn(key, value.value);
+                        break;
+                    case 'notContainedIn':
+                        query.notContainedIn(key, value.value);
+                        break;
+                    case 'exists':
+                        query.exists(key);
+                        break;
+                    case 'doesNotExist':
+                        query.doesNotExist(key);
+                        break;
+                }
+            } else {
+                query.equalTo(key, value);
+            }
+        });
+    }
+
+    // 使用 count() 而不是 find()，只返回数量
+    const count = await query.count();
+    return count;
 }
 
 // 保存数据

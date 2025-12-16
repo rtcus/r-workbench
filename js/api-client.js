@@ -111,6 +111,15 @@ class APIClient {
             options
         });
     }
+    
+    // 计数查询（优化性能）
+    async count(className, conditions = {}, options = {}) {
+        return await this.request('count', {
+            className,
+            conditions,
+            options
+        });
+    }
 
     // 简化的查询方法
     async findAll(className, options = {}) {
@@ -441,9 +450,25 @@ const AV = {
             return this;
         }
         
+        include(...keys) {
+            if (!this.options.include) {
+                this.options.include = [];
+            }
+            this.options.include.push(...keys);
+            return this;
+        }
+        
+        select(...keys) {
+            if (!this.options.select) {
+                this.options.select = [];
+            }
+            this.options.select.push(...keys);
+            return this;
+        }
+        
         async count() {
-            const results = await api.query(this.className, this.conditions, this.options);
-            return results.length;
+            // 使用专门的 count 请求，不获取完整数据
+            return await api.count(this.className, this.conditions, this.options);
         }
         
         async find() {
