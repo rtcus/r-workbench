@@ -24,24 +24,27 @@ const corsHeaders = {
 
 // 主处理函数
 module.exports = async (req, res) => {
-    // 处理 OPTIONS 预检请求
-    if (req.method === 'OPTIONS') {
-        return res.status(200).headers(corsHeaders).send();
-    }
-
-    // 添加CORS头
+    // 设置CORS头
     Object.entries(corsHeaders).forEach(([key, value]) => {
         res.setHeader(key, value);
     });
 
+    // 处理 OPTIONS 预检请求
+    if (req.method === 'OPTIONS') {
+        return res.status(200).send('');
+    }
+
     try {
         const { action, data } = req.body;
+        
+        console.log(`API请求: ${action}`, data ? Object.keys(data) : 'no data');
 
         // 恢复会话（如果有sessionToken）
         if (data?.sessionToken) {
             try {
                 const user = await AV.User.become(data.sessionToken);
                 AV.User._currentUser = user;
+                console.log('Session恢复成功:', user.id);
             } catch (error) {
                 console.error('Session恢复失败:', error);
             }
@@ -106,11 +109,17 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('API错误:', error);
+        console.error('API错误:', {
+            action: req.body?.action || 'unknown',
+            error: error.message,
+            stack: error.stack,
+            code: error.code
+        });
+        
         res.status(500).json({
             success: false,
             error: error.message,
-            code: error.code
+            code: error.code || 'INTERNAL_ERROR'
         });
     }
 };
@@ -356,22 +365,49 @@ async function handleDelete({ className, objectId }) {
 
 // 文件上传
 async function handleFileUpload({ filename, base64Data, mimeType }) {
-    // 创建文件时直接设置MIME类型
-    const fileOptions = {
-        base64: base64Data
-    };
-    
-    // 使用正确的方式设置MIME类型，避免访问内部属性
-    const file = new AV.File(filename, fileOptions);
+    try {
+        // 验证输入参数
+        if (!filename || !base64Data) {
+            throw new Error('缺少文件名或文件数据');
+        }
 
-    const savedFile = await file.save();
-    
-    return {
-        objectId: savedFile.id,
-        name: savedFile.name(),
-        url: savedFile.url(),
-        mimeType: savedFile.mime()
-    };
+        // 创建文件时直接设置MIME类型
+        const fileOptions = {
+            base64: base64Data
+        };
+        
+        // 如果提供了MIME类型，添加到选项中
+        if (mimeType) {
+            fileOptions.type = mimeType;
+        }
+        
+        // 创建文件对象
+        const file = new AV.File(filename, fileOptions);
+        
+        console.log(`开始上传文件: ${filename}, 大小: ${base64Data.length} 字符`);
+
+        const savedFile = await file.save();
+        
+        console.log(`文件上传成功: ${savedFile.id}`);
+        
+        // 构建返回结果，使用多种方式获取MIME类型
+        let mimeTypeResult = mimeType || 'application/octet-stream';
+        
+        // 尝试从文件对象获取MIME类型
+        if (savedFile.get && typeof savedFile.get === 'function') {
+            mimeTypeResult = savedFile.get('mime') || mimeTypeResult;
+        }
+        
+        return {
+            objectId: savedFile.id,
+            name: savedFile.name(),
+            url: savedFile.url(),
+            mimeType: mimeTypeResult
+        };
+    } catch (error) {
+        console.error('文件上传失败:', error);
+        throw new Error(`文件上传失败: ${error.message}`);
+    }
 }
 
 // 批量保存

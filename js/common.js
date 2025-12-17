@@ -632,11 +632,10 @@ async function findRecordById(id) {
 // 上传单个文件到LeanCloud
 async function uploadSingleFile(file, fileType) {
     try {
-        const avFile = new AV.File(file.name, file);
-        await avFile.save();
+        const uploadedFile = await api.uploadFile(file);
         return {
-            url: avFile.url(),
-            id: avFile.id
+            url: uploadedFile.url,
+            id: uploadedFile.objectId
         };
     } catch (error) {
         console.error('文件上传失败:', error);

@@ -1,27 +1,49 @@
 // 文件管理功能模块
 let fileListData = [];
+let currentPage = 1;
+let pageSize = 20;
+let totalItems = 0;
 
 // 加载文件列表
-async function loadFileList() {
+async function loadFileList(page = 1, resetData = false) {
     try {
         const tbody = document.getElementById('fileListBody');
         if (!tbody) return;
         
+        if (resetData) {
+            currentPage = page;
+            fileListData = [];
+        }
+        
         tbody.innerHTML = '<tr><td colspan="7" class="loading">正在加载文件列表...</td></tr>';
         
-        // 从Tracking表中获取所有有附件的记录
+        // 先查询总数
+        const countQuery = new AV.Query('Tracking');
+        countQuery.exists('attachments');
+        const total = await countQuery.count();
+        totalItems = total;
+        
+        // 分页查询数据
         const query = new AV.Query('Tracking');
         query.exists('attachments');
         // 添加select只返回需要的字段，减少数据传输量
         query.select('attachments', 'containerNo', 'customsNo', 'objectId');
-        const results = await query.find();
+        // 按创建时间降序排列，最新的在前
+        query.descending('createdAt');
+        // 分页设置
+        query.skip((page - 1) * pageSize);
+        query.limit(pageSize);
         
-        fileListData = [];
+        console.log(`开始加载文件列表，第${page}页...`);
+        const results = await query.find();
+        console.log(`第${page}页找到 ${results.length} 条记录，总共${total}条`);
+        
+        const newFileData = [];
         results.forEach(item => {
             const data = item.toJSON();
             if (data.attachments && data.attachments.length > 0) {
                 data.attachments.forEach(attachment => {
-                    fileListData.push({
+                    newFileData.push({
                         id: attachment.id,
                         fileName: attachment.name,
                         fileType: attachment.type,
@@ -35,7 +57,14 @@ async function loadFileList() {
             }
         });
         
+        if (resetData) {
+            fileListData = newFileData;
+        } else {
+            fileListData = [...fileListData, ...newFileData];
+        }
+        
         renderFileList();
+        renderPagination();
         
     } catch (error) {
         console.error('加载文件列表失败:', error);
@@ -83,6 +112,59 @@ function renderFileList() {
     
     // 绑定文件操作事件
     bindFileEvents();
+}
+
+// 渲染分页控件
+function renderPagination() {
+    const paginationContainer = document.getElementById('filePagination');
+    if (!paginationContainer) return;
+    
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '<nav aria-label="文件列表分页"><ul class="pagination">';
+    
+    // 上一页按钮
+    if (currentPage > 1) {
+        paginationHTML += `<li class="page-item">
+            <a class="page-link" href="#" onclick="loadFileList(${currentPage - 1}, true); return false;">上一页</a>
+        </li>`;
+    }
+    
+    // 页码按钮
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const activeClass = i === currentPage ? 'active' : '';
+        paginationHTML += `<li class="page-item ${activeClass}">
+            <a class="page-link" href="#" onclick="loadFileList(${i}, true); return false;">${i}</a>
+        </li>`;
+    }
+    
+    // 下一页按钮
+    if (currentPage < totalPages) {
+        paginationHTML += `<li class="page-item">
+            <a class="page-link" href="#" onclick="loadFileList(${currentPage + 1}, true); return false;">下一页</a>
+        </li>`;
+    }
+    
+    paginationHTML += '</ul></nav>';
+    
+    // 添加页面信息
+    paginationHTML += `<div class="pagination-info">
+        显示第 ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalItems)} 条，共 ${totalItems} 条记录
+    </div>`;
+    
+    paginationContainer.innerHTML = paginationHTML;
 }
 
 // 绑定文件操作事件
@@ -148,8 +230,8 @@ async function uploadFiles() {
             }
         }
         
-        // 重新加载文件列表
-        await loadFileList();
+        // 重新加载文件列表（重置到第一页）
+        await loadFileList(1, true);
         
         // 清空文件选择
         fileInput.value = '';
@@ -211,9 +293,8 @@ async function processSingleFile(file, fileType) {
         
         console.log('找到匹配记录:', trackingData.containerNo, trackingData.customsNo);
         
-        // 上传文件到LeanCloud
-        const avFile = new AV.File(file.name, file);
-        await avFile.save();
+        // 使用统一的API客户端上传文件
+        const uploadedFile = await api.uploadFile(file);
         
         // 获取当前记录的附件列表
         const attachments = trackingData.attachments || [];
@@ -224,8 +305,8 @@ async function processSingleFile(file, fileType) {
             type: fileType,
             name: file.name,
             uploadTime: new Date().toLocaleString('zh-CN'),
-            fileUrl: avFile.url(),
-            fileId: avFile.id
+            fileUrl: uploadedFile.url,
+            fileId: uploadedFile.objectId
         };
         
         attachments.push(newAttachment);
@@ -329,9 +410,8 @@ async function showManualFileAssociation(file, fileType) {
                 const tracking = await trackingObj.fetch();
                 const trackingData = tracking.toJSON();
                 
-                // 上传文件到LeanCloud
-                const avFile = new AV.File(file.name, file);
-                await avFile.save();
+                // 使用统一的API客户端上传文件
+                const uploadedFile = await api.uploadFile(file);
                 
                 // 获取当前记录的附件列表
                 const attachments = trackingData.attachments || [];
@@ -342,8 +422,8 @@ async function showManualFileAssociation(file, fileType) {
                     type: fileType,
                     name: file.name,
                     uploadTime: new Date().toLocaleString('zh-CN'),
-                    fileUrl: avFile.url(),
-                    fileId: avFile.id
+                    fileUrl: uploadedFile.url,
+                    fileId: uploadedFile.objectId
                 };
                 
                 attachments.push(newAttachment);
@@ -397,8 +477,8 @@ async function deleteFileFromTracking(trackingId, fileId) {
         tracking.set('attachments', updatedAttachments);
         await tracking.save();
         
-        // 重新加载文件列表
-        await loadFileList();
+        // 重新加载文件列表（重置到第一页）
+        await loadFileList(1, true);
         
         alert('文件删除成功');
         
