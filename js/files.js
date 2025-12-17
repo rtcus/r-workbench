@@ -489,10 +489,17 @@ async function deleteFileFromTracking(trackingId, fileId) {
 }
 
 // 绑定文件管理事件
-document.addEventListener('DOMContentLoaded', function() {
+function bindFileEvents() {
     // 上传文件按钮
     const uploadFilesBtn = document.getElementById('uploadFiles');
     if (uploadFilesBtn) {
-        uploadFilesBtn.addEventListener('click', uploadFiles);
+        // 检查是否已经绑定了事件，避免重复绑定
+        if (!uploadFilesBtn.hasAttribute('data-initialized')) {
+            uploadFilesBtn.addEventListener('click', uploadFiles);
+            uploadFilesBtn.setAttribute('data-initialized', 'true');
+        }
     }
-});
+}
+
+// 页面加载时也绑定一次事件
+document.addEventListener('DOMContentLoaded', bindFileEvents);

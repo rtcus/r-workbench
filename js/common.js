@@ -320,6 +320,10 @@ function initializePageContent(page) {
             if (typeof loadFileList === 'function') {
                 loadFileList();
             }
+            // 重新绑定文件管理页面的事件
+            if (typeof bindFileEvents === 'function') {
+                bindFileEvents();
+            }
             break;
             
         // 移除账单管理
@@ -1412,11 +1416,7 @@ function bindExporterEvents() {
 
 // 绑定文件管理事件
 function bindFilesEvents() {
-    // 上传文件按钮
-    const uploadFilesBtn = document.getElementById('uploadFiles');
-    if (uploadFilesBtn) {
-        uploadFilesBtn.addEventListener('click', uploadFiles);
-    }
+    // 上传文件按钮事件绑定已移至 files.js 中，避免重复绑定
 }
 
 // 绑定账单管理事件
