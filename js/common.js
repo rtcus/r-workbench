@@ -588,9 +588,6 @@ async function handleUploadAttachment() {
                 throw error;
             }
         }
-            
-            console.log(`✅ 成功更新 ${successCount} 个附件`);
-        }
         
         // 清空文件选择
         fileInput.value = '';
