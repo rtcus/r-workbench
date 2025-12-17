@@ -320,8 +320,9 @@ function initializePageContent(page) {
             if (typeof loadFileList === 'function') {
                 loadFileList();
             }
-            // 重新绑定文件管理页面的事件
+            // 文件管理页面的事件绑定在files.js中处理
             if (typeof bindFileEvents === 'function') {
+                console.log('🔗 调用files.js中的bindFileEvents');
                 bindFileEvents();
             }
             break;
