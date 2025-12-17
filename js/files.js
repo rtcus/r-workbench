@@ -493,22 +493,28 @@ function bindFileEvents() {
     console.log('🔗 开始绑定文件管理事件...');
     
     // 上传文件按钮
-    const uploadFilesBtn = document.getElementById('uploadFiles');
-    console.log('🔍 查找上传按钮:', uploadFilesBtn);
+    const uploadBtn = document.getElementById('uploadFiles');
+    console.log('🔍 查找上传按钮:', uploadBtn);
     
-    if (uploadFilesBtn) {
+    if (uploadBtn) {
         // 检查是否已经绑定了事件，避免重复绑定
-        const isInitialized = uploadFilesBtn.hasAttribute('data-initialized');
+        const isInitialized = uploadBtn.hasAttribute('data-initialized');
         console.log('🔍 按钮初始化状态:', isInitialized);
         
         if (!isInitialized) {
             console.log('🔗 绑定上传事件到按钮');
-            uploadFilesBtn.addEventListener('click', function(e) {
+            uploadBtn.addEventListener('click', function(e) {
                 console.log('🔘 上传按钮被点击');
                 e.preventDefault();
-                uploadFiles();
+                if (typeof uploadFiles === 'function') {
+                    uploadFiles();
+                } else if (typeof window.uploadFiles === 'function') {
+                    window.uploadFiles();
+                } else {
+                    console.error('❌ uploadFiles函数不可用');
+                }
             });
-            uploadFilesBtn.setAttribute('data-initialized', 'true');
+            uploadBtn.setAttribute('data-initialized', 'true');
             console.log('✅ 文件管理事件绑定完成');
         } else {
             console.log('ℹ️ 按钮已经绑定过事件');
