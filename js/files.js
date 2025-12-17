@@ -527,3 +527,6 @@ window.bindFileEvents = bindFileEvents;
 document.addEventListener('DOMContentLoaded', bindFileEvents);
 
 console.log('✅ files.js 函数已暴露到全局作用域');
+console.log('🔍 暴露后检查window.uploadFiles:', typeof window.uploadFiles);
+console.log('🔍 暴露后检查window.loadFileList:', typeof window.loadFileList);
+console.log('🔍 暴露后检查window.bindFileEvents:', typeof window.bindFileEvents);

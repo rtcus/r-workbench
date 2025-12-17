@@ -334,11 +334,19 @@ function initializePageContent(page) {
                         console.log('🔗 直接绑定上传按钮');
                         uploadBtn.addEventListener('click', function() {
                             console.log('🔘 上传按钮被点击（直接绑定）');
-                            if (typeof uploadFiles === 'function') {
-                                uploadFiles();
-                            } else {
-                                console.error('❌ uploadFiles函数也不可用');
-                            }
+                        console.log('🔍 检查window.uploadFiles:', typeof window.uploadFiles);
+                        console.log('🔍 检查uploadFiles:', typeof uploadFiles);
+                        console.log('🔍 检查window对象上的uploadFiles:', window.uploadFiles);
+                        
+                        if (typeof uploadFiles === 'function') {
+                            uploadFiles();
+                        } else if (typeof window.uploadFiles === 'function') {
+                            window.uploadFiles();
+                        } else {
+                            console.error('❌ uploadFiles函数完全不可用');
+                            // 尝试直接在这里实现上传逻辑
+                            alert('文件上传功能暂时不可用，请刷新页面重试');
+                        }
                         });
                     }
                 }
