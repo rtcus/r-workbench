@@ -623,10 +623,29 @@ async function findRecordById(id) {
     
     if (item) {
         // 确保从LeanCloud获取最新数据
-        if (item.leanCloudObject) {
-            await item.leanCloudObject.fetch();
-            const freshData = item.leanCloudObject.toJSON();
-            item.attachments = freshData.attachments || [];
+        if (item.leanCloudObject && typeof item.leanCloudObject.fetch === 'function') {
+            try {
+                await item.leanCloudObject.fetch();
+                const freshData = item.leanCloudObject.toJSON();
+                item.attachments = freshData.attachments || [];
+            } catch (error) {
+                console.warn('fetch方法调用失败，尝试使用API客户端:', error);
+                // 如果fetch失败，使用API客户端获取最新数据
+                try {
+                    const freshData = await api.findById('Tracking', item.id);
+                    item.attachments = freshData.attachments || [];
+                } catch (apiError) {
+                    console.error('API客户端获取数据也失败:', apiError);
+                }
+            }
+        } else if (item.id) {
+            // 如果没有leanCloudObject但有ID，使用API客户端获取最新数据
+            try {
+                const freshData = await api.findById('Tracking', item.id);
+                item.attachments = freshData.attachments || [];
+            } catch (error) {
+                console.error('API客户端获取数据失败:', error);
+            }
         }
     }
     
