@@ -321,10 +321,12 @@ function initializePageContent(page) {
                 loadFileList();
             }
             // 文件管理页面的事件绑定在files.js中处理
-            if (typeof bindFileEvents === 'function') {
-                console.log('🔗 调用files.js中的bindFileEvents');
-                bindFileEvents();
-            }
+            setTimeout(() => {
+                if (typeof bindFileEvents === 'function') {
+                    console.log('🔗 调用files.js中的bindFileEvents');
+                    bindFileEvents();
+                }
+            }, 100); // 延迟100ms确保DOM准备好
             break;
             
         // 移除账单管理
