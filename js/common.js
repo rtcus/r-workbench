@@ -572,7 +572,15 @@ async function handleUploadAttachment() {
                     await item.leanCloudObject.save();
                 } else if (item.id) {
                     // 降级使用API客户端保存
-                    await api.update('Tracking', item.id, { attachments: newAttachments });
+                    console.log('📝 使用API更新，ID:', item.id, '附件数量:', newAttachments.length);
+                    console.log('📝 newAttachments样例:', newAttachments.slice(0, 1));
+                    try {
+                        const result = await api.update('Tracking', item.id, { attachments: newAttachments });
+                        console.log('✅ API更新成功:', result);
+                    } catch (apiError) {
+                        console.error('❌ API更新失败:', apiError);
+                        throw apiError;
+                    }
                 }
                 
                 // 更新本地数据

@@ -338,11 +338,14 @@ async function handleSave({ className, data }) {
 
 // 更新数据
 async function handleUpdate({ className, objectId, data }) {
+    console.log(`📝 更新${className}，ID:${objectId}，数据:`, Object.keys(data));
+    
     const ObjectClass = AV.Object.extend(className);
-    const object = AV.Object.createWithoutData(ObjectClass, objectId);
+    const object = AV.Object.createWithoutData(className, objectId);
 
     // 更新数据
     Object.entries(data).forEach(([key, value]) => {
+        console.log(`📝 设置字段: ${key} =`, typeof value === 'object' ? `Array(${value.length})` : value);
         object.set(key, value);
     });
 
@@ -357,7 +360,7 @@ async function handleUpdate({ className, objectId, data }) {
 // 删除数据
 async function handleDelete({ className, objectId }) {
     const ObjectClass = AV.Object.extend(className);
-    const object = AV.Object.createWithoutData(ObjectClass, objectId);
+    const object = AV.Object.createWithoutData(className, objectId);
     await object.destroy();
     
     return { success: true, objectId };
