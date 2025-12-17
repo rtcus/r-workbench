@@ -322,11 +322,27 @@ function initializePageContent(page) {
             }
             // 文件管理页面的事件绑定在files.js中处理
             setTimeout(() => {
+                console.log('🔍 检查bindFileEvents函数可用性:', typeof bindFileEvents);
                 if (typeof bindFileEvents === 'function') {
                     console.log('🔗 调用files.js中的bindFileEvents');
                     bindFileEvents();
+                } else {
+                    console.log('⚠️ bindFileEvents函数不可用，尝试直接绑定');
+                    // 直接在这里绑定事件
+                    const uploadBtn = document.getElementById('uploadFiles');
+                    if (uploadBtn) {
+                        console.log('🔗 直接绑定上传按钮');
+                        uploadBtn.addEventListener('click', function() {
+                            console.log('🔘 上传按钮被点击（直接绑定）');
+                            if (typeof uploadFiles === 'function') {
+                                uploadFiles();
+                            } else {
+                                console.error('❌ uploadFiles函数也不可用');
+                            }
+                        });
+                    }
                 }
-            }, 100); // 延迟100ms确保DOM准备好
+            }, 200); // 延迟200ms确保DOM和脚本都准备好
             break;
             
         // 移除账单管理
