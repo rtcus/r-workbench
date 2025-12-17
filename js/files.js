@@ -518,5 +518,12 @@ function bindFileEvents() {
     }
 }
 
+// 显式暴露函数到全局作用域
+window.loadFileList = loadFileList;
+window.uploadFiles = uploadFiles;
+window.bindFileEvents = bindFileEvents;
+
 // 页面加载时也绑定一次事件
 document.addEventListener('DOMContentLoaded', bindFileEvents);
+
+console.log('✅ files.js 函数已暴露到全局作用域');
