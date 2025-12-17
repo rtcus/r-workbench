@@ -566,12 +566,8 @@ async function handleUploadAttachment() {
         if (successCount > 0) {
             console.log('💾 保存附件列表到LeanCloud');
             try {
-                if (item.leanCloudObject && typeof item.leanCloudObject.save === 'function') {
-                    // 优先使用LeanCloud对象保存
-                    item.leanCloudObject.set('attachments', newAttachments);
-                    await item.leanCloudObject.save();
-                } else if (item.id) {
-                    // 降级使用API客户端保存
+                // 临时强制使用API客户端，避免LeanCloud对象问题
+                if (item.id) {
                     console.log('📝 使用API更新，ID:', item.id, '附件数量:', newAttachments.length);
                     console.log('📝 newAttachments样例:', newAttachments.slice(0, 1));
                     try {
@@ -581,6 +577,9 @@ async function handleUploadAttachment() {
                         console.error('❌ API更新失败:', apiError);
                         throw apiError;
                     }
+                } else {
+                    console.error('❌ 找不到item.id，无法更新');
+                    throw new Error('找不到记录ID');
                 }
                 
                 // 更新本地数据
@@ -1043,13 +1042,14 @@ async function deleteAttachment(trackingId, attachmentId) {
         
         // 2. 更新LeanCloud记录（移除附件引用）
         try {
-            if (item.leanCloudObject && typeof item.leanCloudObject.save === 'function') {
-                item.leanCloudObject.set('attachments', updatedAttachments);
-                await item.leanCloudObject.save();
-                console.log('✅ LeanCloud 记录更新完成');
-            } else if (item.id) {
+            // 临时强制使用API客户端，避免LeanCloud对象问题
+            if (item.id) {
+                console.log('📝 删除附件：使用API更新，ID:', item.id, '剩余附件数量:', updatedAttachments.length);
                 await api.update('Tracking', item.id, { attachments: updatedAttachments });
                 console.log('✅ API 记录更新完成');
+            } else {
+                console.error('❌ 删除附件时找不到item.id');
+                throw new Error('找不到记录ID');
             }
         } catch (error) {
             console.error('更新LeanCloud记录失败:', error);
