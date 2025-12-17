@@ -563,17 +563,31 @@ async function handleUploadAttachment() {
         }
         
         // 批量更新到LeanCloud
-        if (successCount > 0 && item.leanCloudObject) {
+        if (successCount > 0) {
             console.log('💾 保存附件列表到LeanCloud');
-            item.leanCloudObject.set('attachments', newAttachments);
-            await item.leanCloudObject.save();
-            
-            // 更新本地数据
-            item.attachments = newAttachments;
-            
-            // 更新界面显示
-            refreshAttachmentList(item);
-            updateAllAttachmentCounts(trackingId, newAttachments.length);
+            try {
+                if (item.leanCloudObject && typeof item.leanCloudObject.save === 'function') {
+                    // 优先使用LeanCloud对象保存
+                    item.leanCloudObject.set('attachments', newAttachments);
+                    await item.leanCloudObject.save();
+                } else if (item.id) {
+                    // 降级使用API客户端保存
+                    await api.update('Tracking', item.id, { attachments: newAttachments });
+                }
+                
+                // 更新本地数据
+                item.attachments = newAttachments;
+                
+                // 更新界面显示
+                refreshAttachmentList(item);
+                updateAllAttachmentCounts(trackingId, newAttachments.length);
+                
+                console.log(`✅ 成功更新 ${successCount} 个附件`);
+            } catch (error) {
+                console.error('保存附件列表失败:', error);
+                throw error;
+            }
+        }
             
             console.log(`✅ 成功更新 ${successCount} 个附件`);
         }
@@ -1023,10 +1037,18 @@ async function deleteAttachment(trackingId, attachmentId) {
         }
         
         // 2. 更新LeanCloud记录（移除附件引用）
-        if (item.leanCloudObject) {
-            item.leanCloudObject.set('attachments', updatedAttachments);
-            await item.leanCloudObject.save();
-            console.log('✅ LeanCloud 记录更新完成');
+        try {
+            if (item.leanCloudObject && typeof item.leanCloudObject.save === 'function') {
+                item.leanCloudObject.set('attachments', updatedAttachments);
+                await item.leanCloudObject.save();
+                console.log('✅ LeanCloud 记录更新完成');
+            } else if (item.id) {
+                await api.update('Tracking', item.id, { attachments: updatedAttachments });
+                console.log('✅ API 记录更新完成');
+            }
+        } catch (error) {
+            console.error('更新LeanCloud记录失败:', error);
+            throw error;
         }
         
         // 🔥 修复：强制更新所有本地数据
